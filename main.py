@@ -12,11 +12,11 @@ def main():
 def send_lib(path):
     return send_from_directory('lib', path)
 
-@app.route("/geolocation", methods=['POST', 'GET'])
+@app.route("/geojson", methods=['POST', 'GET'])
 def geocodesPost():
     accID = request.form.get('accID')
     if accID is not None:
-        return json.dumps(nessie.getGeolocations(accID))
+        return json.dumps(nessie.getGeojson(accID))
     else:
         return "{error:'Invalid input'}"
 
@@ -33,4 +33,6 @@ def yelpPost():
     return "{error:'Invalid input'}"
 
 if __name__ == "__main__":
+    #print json.dumps(nessie.getGeojson('560f0205f8d8770df0ef9a2f'))
+    #print json.dumps(yelp.search(35.907761, -79.061257, 35.919301, -79.044305))
     app.run()

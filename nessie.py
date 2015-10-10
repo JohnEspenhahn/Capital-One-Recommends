@@ -5,16 +5,20 @@ import json
 merchants_cache = { }
 apiKey = '731357383e6050a3ea9a49fb6b02b87f'
 
-def getGeolocations(custID):
+def getGeojson(custID):
     geocodes = [ ]
     for accID in getAccounts(custID):
         for purchase in getPurchases(accID):
             merchant = getMerchant(purchase['merchant_id'])
-            geocodes.append(merchant['geocode'])
+            geocodes.append({
+                'type': 'Feature',
+                'geometry': { 'type': 'Point', 'coordinates': merchant['geocode'] },
+                'properties': { }
+            })
 
     # Clear cache and return
     merchants_cache.clear();
-    return geocodes
+    return { 'type': 'FeatureCollection', 'features': geocodes }
 
 
 def getAccounts(custID):
