@@ -12,7 +12,7 @@ def main():
 def send_lib(path):
     return send_from_directory('lib', path)
 
-@app.route("/geocodes", methods=['POST', 'GET'])
+@app.route("/geolocation", methods=['POST', 'GET'])
 def geocodesPost():
     accID = request.form.get('accID')
     if accID is not None:
