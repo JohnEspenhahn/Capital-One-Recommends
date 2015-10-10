@@ -1,0 +1,96 @@
+<!doctype html>
+<link rel="stylesheet" href="//js.arcgis.com/3.14/dijit/themes/claro/claro.css">
+<link rel="stylesheet" href="//js.arcgis.com/3.14/esri/css/esri.css">
+<title>Main</title>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script> -->
+<script data-main="lib/capital_one" src="lib/require-jquery.js"></script>
+<script src="//js.arcgis.com/3.14/"></script>
+<script>
+    $(function(){
+        require(['account', 'atm', 'purchase', 'merchant'], function (account, atm, purchase, merchant) {
+            var apikey = '731357383e6050a3ea9a49fb6b02b87f';
+            var custID = '560f0205f8d8770df0ef9a2f';
+
+            // Load merchants based on purchases for each account
+            var merchants = { }; // index: merchant_id, value: visits
+            loadAccounts(apikey, custID, account).forEach(
+                    function(accID) {
+                        console.log("Loading account: " + accID);
+                        var ps = loadPurchases(apikey, accID, purchase);
+                        ps.forEach(function(p) {
+                            console.log("Handling purchase: ");
+                            console.log(p);
+
+                            var merch = merchants[p.merchant_id];
+                            if (merch === undefined) {
+                                merchants[p.merchant_id] = 1;
+                            } else {
+                                merchants[p.merchant_id] = merch + 1;
+                            }
+                        });
+                    }
+                );
+
+            // Load merchant geocodes
+            var geocodes = [ ];
+            for (var id in merchants) {
+                var visits = merchants[id],
+                    merchantObj = loadMerchant(apikey, merchant, id);
+
+                console.log("Merchant id: " + id + " visits: " + visits);
+                // Load merchant point as many times as has visited
+                for (var i = 0; i < visits; i++) {
+                    geocodes.push(merchantObj.geocode);
+                }
+            }
+
+            console.log(geocodes);
+        });
+    });
+
+    function loadAccounts(apikey, custID, account) {
+        var custAccount = account.initWithKey(apikey),
+            acctObjs = custAccount.getAllByCustomerId(custID),
+            accIDs = [ ];
+
+        acctObjs.forEach(function(acc) {
+            accIDs.push(acc._id);
+        });
+
+        return accIDs;
+    }
+
+    function loadPurchases(apikey, accID, purchase) {
+        var purchaseAccount = purchase.initWithKey(apikey);
+        return purchaseAccount.getAll(accID);
+    }
+
+    function loadMerchant(apikey, merchant, merchantID) {
+        var merchantAccount = merchant.initWithKey(apikey);
+        return merchantAccount.getMerchant(merchantID);
+    }
+
+    function createMap(geocodes) { 
+        
+    }
+
+    function loadYelp(sw_latitude, sw_longitude, ne_latitude, ne_longitude) {
+        $.post(
+            '/yelp', 
+            { 
+                sw_latitude: 35.907761, sw_longitude: -79.061257, 
+                ne_latitude: 35.919301, ne_longitude: -79.044305
+            },
+            function(data) {
+                data = JSON.parse(data);
+                console.log(data);
+
+                var business = data.businesses[0];
+                $(document.body).append(
+                    business.name + " (" + business.rating + " stars)"
+                );
+            }
+        );
+    }
+</script>
