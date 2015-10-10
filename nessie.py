@@ -8,11 +8,7 @@ apiKey = '731357383e6050a3ea9a49fb6b02b87f'
 def getGeolocations(custID):
     geocodes = [ ]
     for accID in getAccounts(custID):
-        print 'Loading account ' + accID
         for purchase in getPurchases(accID):
-            print 'Loading purchase '
-            print purchase
-
             merchant = getMerchant(purchase['merchant_id'])
             geocodes.append(merchant['geocode'])
 

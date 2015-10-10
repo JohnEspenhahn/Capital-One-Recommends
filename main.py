@@ -14,8 +14,11 @@ def send_lib(path):
 
 @app.route("/geocodes", methods=['POST', 'GET'])
 def geocodesPost():
-    print 'Running geocodes'
-    return json.dumps(nessie.getGeolocations('560f0205f8d8770df0ef9a2f'))
+    accID = request.form.get('accID')
+    if accID is not None:
+        return json.dumps(nessie.getGeolocations(accID))
+    else:
+        return "{error:'Invalid input'}"
 
 @app.route("/yelp", methods=['POST'])
 def yelpPost():
