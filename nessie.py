@@ -1,4 +1,3 @@
-
 import requests
 import json
 
@@ -11,14 +10,13 @@ def getGeojson(custID):
         for purchase in getPurchases(accID):
             merchant = getMerchant(purchase['merchant_id'])
             geocodes.append({
-                'type': 'Feature',
-                'geometry': { 'type': 'Point', 'coordinates': merchant['geocode'] },
-                'properties': { }
+                'latitude': str(merchant['geocode']['lat']),
+                'longitude': str(merchant['geocode']['lng'])
             })
 
     # Clear cache and return
     merchants_cache.clear();
-    return { 'type': 'FeatureCollection', 'features': geocodes }
+    return { 'items': geocodes }
 
 
 def getAccounts(custID):

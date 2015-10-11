@@ -1,42 +1,273 @@
 <!doctype html>
-<link rel="stylesheet" href="//js.arcgis.com/3.14/dijit/themes/claro/claro.css">
-<link rel="stylesheet" href="//js.arcgis.com/3.14/esri/css/esri.css">
-<title>Main</title>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script src="//js.arcgis.com/3.14/"></script>
-<script>
-    $(function(){
-        $.post(
-            '/geojson',
-            {
-                accID: '560f0205f8d8770df0ef9a2f'
-            },
-            function(data) {
-                console.log(JSON.parse(data));
-            });
-    });
-
-    function createMap(geocodes) { 
-        
-    }
-
-    function loadYelp(sw_latitude, sw_longitude, ne_latitude, ne_longitude) {
-        $.post(
-            '/yelp', 
-            { 
-                sw_latitude: 35.907761, sw_longitude: -79.061257, 
-                ne_latitude: 35.919301, ne_longitude: -79.044305
-            },
-            function(data) {
-                data = JSON.parse(data);
-                console.log(data);
-
-                var business = data.businesses[0];
-                $(document.body).append(
-                    business.name + " (" + business.rating + " stars)"
-                );
+<html>
+<head>
+    <title>Main</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
+    <style>
+      html, body, #map {
+        height:100%;
+        width:100%;
+        margin:0;
+        padding:0;
+      }
+      .esriScalebar{
+        padding: 20px 20px; 
+      } 
+      #map{ 
+        padding:0;
+      }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script>
+        var dojoConfig = { 
+            parseOnLoad: true,
+            paths: {
+                extras: "/lib/extras"
             }
-        );
-    }
-</script>
+        };
+    </script>
+    <script src="//js.arcgis.com/3.14/"></script>
+    <script>
+        window.captial_one_recommends = { geojson: null };
+        $(function(){
+            $.post(
+                '/geojson',
+                {
+                    accID: '560f0205f8d8770df0ef9a2f'
+                },
+                function(data) {
+                    captial_one_recommends.geojson = JSON.parse(data);
+                    console.log(captial_one_recommends.geojson);
+                });
+        });
+
+        function loadYelp(sw_latitude, sw_longitude, ne_latitude, ne_longitude) {
+            $.post(
+                '/yelp', 
+                {
+                    sw_latitude: 35.907761, sw_longitude: -79.061257, 
+                    ne_latitude: 35.919301, ne_longitude: -79.044305
+                },
+                function(data) {
+                    data = JSON.parse(data);
+                    console.log(data);
+
+                    var business = data.businesses[0];
+                    $(document.body).append(
+                        business.name + " (" + business.rating + " stars)"
+                    );
+                }
+            );
+        }
+    </script>
+     <script>
+        var map;
+        require([
+            "esri/map",
+            "esri/renderers/HeatmapRenderer",
+            "esri/layers/FeatureLayer",
+            "extras/ClusterLayer",
+            "esri/geometry/Multipoint",
+            "esri/dijit/PopupTemplate",
+            "esri/request",
+            "esri/geometry/Point",
+            "esri/geometry/webMercatorUtils",
+            "esri/graphic",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/symbols/PictureMarkerSymbol",
+            "esri/renderers/ClassBreaksRenderer",
+            "dojo/on",
+            "dojo/_base/array",
+            "dojo/domReady!"
+        ], function(
+                Map,
+                HeatmapRenderer,
+                FeatureLayer,
+                ClusterLayer,
+                Multipoint,
+                PopupTemplate,
+                esriRequest,
+                Point,
+                webMercatorUtils,
+                Graphic,
+                SimpleMarkerSymbol, SimpleFillSymbol, PictureMarkerSymbol, ClassBreaksRenderer,
+                on,
+                array
+                ) {
+
+            var featureLayer;
+            map = new Map("map", {
+                basemap: "gray",
+                center: [0, 0],
+                zoom: 7
+            });
+
+            //hide the popup if its outside the map's extent
+            map.on("mouse-drag", function(evt) {
+                if (map.infoWindow.isShowing) {
+                    var loc = map.infoWindow.getSelectedFeature().geometry;
+                    if (!map.extent.contains(loc)) {
+                        map.infoWindow.hide();
+                    }
+                }
+            });
+
+            //create a feature collection for the flickr photos
+            var featureCollection = {
+                "layerDefinition": null,
+                "featureSet": {
+                    "features": [],
+                    "geometryType": "esriGeometryPoint"
+                }
+            };
+
+            featureCollection.layerDefinition = {
+                "geometryType": "esriGeometryPoint",
+                "objectIdField": "ObjectID",
+                "drawingInfo": {
+                    "renderer": {
+                        "type": "simple",
+                        "symbol": {
+                            "color": [255,255,255,64],
+                            "size": 12,
+                            "angle": -30,
+                            "xoffset": 0,
+                            "yoffset": 0,
+                            "type": "esriSMS",
+                            "style": "esriSMSCircle",
+                            "outline": {
+                                "color": [0,0,0,255],
+                                "width": 1,
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid"
+                            }
+                        }
+                    }
+                },
+                "fields": [{
+                    "name": "ObjectID",
+                    "alias": "ObjectID",
+                    "type": "esriFieldTypeOID"
+                }, {
+                    "name": "title",
+                    "alias": "Title",
+                    "type": "esriFieldTypeString"
+                }]
+            };
+
+            //define a popup template
+            var popupTemplate = new PopupTemplate({
+                title: "{title}"
+            });
+
+            //create a feature layer based on the feature collection
+            featureLayer = new FeatureLayer(featureCollection, {
+                id: 'pointsLayer'
+            });
+            featureLayer.setRenderer(new HeatmapRenderer({
+                blurRadius: 12,
+                maxPixelIntensity: 45,
+                minPixelIntensity: 0
+            }));
+
+            map.on("layers-add-result", function(results) {
+                captial_one_recommends.layersReady = true;
+                syncWaitLayerGeojson();
+            });
+
+            //add the feature layer that contains the flickr photos to the map
+            map.addLayers([featureLayer]);
+
+            function syncWaitLayerGeojson() {
+                if (captial_one_recommends.geojson && captial_one_recommends.layersReady) {
+                    console.log('Updating features');
+
+                    //loop through the items and add to the feature layer
+                    var features = [];
+                    captial_one_recommends.geojson.items.forEach(function(item) {
+                        var geometry = new Point(item)
+                          , graphic = new Graphic(geometry);
+
+                        graphic.setAttributes({ title: "Point" });
+                        features.push(graphic);
+                    });
+
+                    console.log('Features');
+                    console.log(features);
+                    featureLayer.applyEdits(features, null, null);
+                    zoomToData(featureLayer);
+
+                    addClusters(captial_one_recommends.geojson.items);
+                } else {
+                    setTimeout(syncWaitLayerGeojson, 50);
+                }
+            }
+
+            function zoomToData(featureLayer) {
+                console.log('Zooming');
+
+                // Zoom to the collective extent of the data
+                var multipoint = new Multipoint({ "wkid":4326 });
+                featureLayer.graphics.forEach(function (graphic) {
+                    var geometry = graphic.geometry;
+                    if (geometry) {
+                        multipoint.addPoint({ 
+                            x: geometry.x,
+                            y: geometry.y
+                        });
+                    }
+                });
+
+                console.log(multipoint.getExtent());
+                if (multipoint.points.length > 0) {
+                    map.setExtent(multipoint.getExtent().expand(1.25), true);
+                }
+            }
+
+            function addClusters(items) {
+                console.log('Clustering');
+
+                var processed = { };
+                processed.data = array.map(items, function(item) {
+                    var latlng = new Point(item)
+                      , webMercator = webMercatorUtils.geographicToWebMercator(latlng);
+                    return {
+                        "x": webMercator.x,
+                        "y": webMercator.y,
+                        "attributes": { }
+                    };
+                });
+
+                console.log('Processed cluster data');
+                console.log(processed);
+                clusterLayer = new ClusterLayer({
+                    "data": processed.data,
+                    "distance": 200,
+                    "id": "clusters",
+                    "labelColor": "#fff",
+                    "labelOffset": 10,
+                    "resolution": map.extent.getWidth() / map.width,
+                    "singleColor": "#888"
+                });
+                var defaultSym = new SimpleMarkerSymbol().setSize(4);
+                var renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
+
+                var picBaseUrl = "http://static.arcgis.com/images/Symbols/Shapes/";
+                var blue = new PictureMarkerSymbol(picBaseUrl + "BluePin1LargeB.png", 32, 32).setOffset(0, 15);
+                var green = new PictureMarkerSymbol(picBaseUrl + "GreenPin1LargeB.png", 64, 64).setOffset(0, 15);
+                var red = new PictureMarkerSymbol(picBaseUrl + "RedPin1LargeB.png", 72, 72).setOffset(0, 15);
+                renderer.addBreak(0, 2, blue);
+                renderer.addBreak(2, 200, green);
+                renderer.addBreak(200, 1001, red);
+
+                clusterLayer.setRenderer(renderer);
+                map.addLayer(clusterLayer);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>
