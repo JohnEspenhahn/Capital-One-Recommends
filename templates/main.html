@@ -248,7 +248,8 @@
                     "labelColor": "#fff",
                     "labelOffset": 10,
                     "resolution": map.extent.getWidth() / map.width,
-                    "singleColor": "#888"
+                    "singleColor": "#888",
+                    "no_click": true
                 });
                 var defaultSym = new SimpleMarkerSymbol().setSize(4);
                 var renderer = new ClassBreaksRenderer(defaultSym, "clusterCount");
