@@ -247,6 +247,7 @@
                 renderer.addBreak(200, 1001, red);
 
                 clusterLayer.setRenderer(renderer);
+                if (!captial_one_recommends.debug) clusterLayer.hide();
                 map.addLayer(clusterLayer);
 
                 // Find cluster corners. WARNING: Doesn't work well around 180 longitude and by poles. This shouldn't matter
