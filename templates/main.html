@@ -32,7 +32,6 @@
         };
     </script>
     <script src="//js.arcgis.com/3.14/"></script>
-    <script src="/lib/main.js"></script>
 </head>
 <body>
     <div id="map"></div>
@@ -85,7 +84,8 @@
         </div>
       </div>
     </div>
-      <div id="modalRegister" class="modal">
+    <!-- Register form -->
+    <div id="modalRegister" class="modal">
       <div class="modal-content">
         <h4>Register</h4>
           <form class="col s12">
@@ -116,7 +116,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <a href="#!" id="registerButton" class=" modal-action modal-close waves-effect waves-green btn-flat">Register</a>
+        <a href="#!" id="registerButton" class=" modal-action waves-effect waves-green btn-flat">Register</a>
       </div>
     </div>
     <!-- Login Form -->
@@ -139,7 +139,8 @@
         </form>
       </div>
       <div class="modal-footer">
-        <a href="#!" id="loginButton" class=" modal-action modal-close waves-effect waves-green btn-flat">Login</a>
+        <a href="#!" id="loginButton" class="modal-action waves-effect waves-green btn-flat">Login</a>
+        <a href="#!" id="openRegisterButton" class=" modal-action waves-effect waves-green btn-flat">Register</a>
       </div>
     </div>
 
@@ -154,5 +155,7 @@
             -webkit-filter: blur(5px) grayscale(0) saturate(1.3) brightness(1);
         }
     </style>
+
+    <script src="/lib/main.js"></script>
 </body>
 </html>
