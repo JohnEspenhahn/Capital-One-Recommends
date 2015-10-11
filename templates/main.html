@@ -28,7 +28,7 @@
     </script>
     <script src="//js.arcgis.com/3.14/"></script>
     <script>
-        window.captial_one_recommends = { geojson: null };
+        window.captial_one_recommends = { geojson: null, debug: false };
         $(function(){
             $.post(
                 '/geojson',
@@ -40,26 +40,8 @@
                     console.log(captial_one_recommends.geojson);
                 });
         });
-
-        function loadYelp(sw_latitude, sw_longitude, ne_latitude, ne_longitude) {
-            $.post(
-                '/yelp', 
-                {
-                    sw_latitude: 35.907761, sw_longitude: -79.061257, 
-                    ne_latitude: 35.919301, ne_longitude: -79.044305
-                },
-                function(data) {
-                    data = JSON.parse(data);
-                    console.log(data);
-
-                    var business = data.businesses[0];
-                    $(document.body).append(
-                        business.name + " (" + business.rating + " stars)"
-                    );
-                }
-            );
-        }
     </script>
+
      <script>
         var map;
         require([
@@ -171,13 +153,17 @@
                 minPixelIntensity: 0
             }));
 
+            selectLayer = new FeatureLayer(featureCollection, {
+                id: 'selectLayer'
+            });
+
             map.on("layers-add-result", function(results) {
                 captial_one_recommends.layersReady = true;
                 syncWaitLayerGeojson();
             });
 
             //add the feature layer that contains the flickr photos to the map
-            map.addLayers([featureLayer]);
+            map.addLayers([selectLayer, featureLayer]);
 
             function syncWaitLayerGeojson() {
                 if (captial_one_recommends.geojson && captial_one_recommends.layersReady) {
@@ -189,7 +175,6 @@
                         var geometry = new Point(item)
                           , graphic = new Graphic(geometry);
 
-                        graphic.setAttributes({ title: "Point" });
                         features.push(graphic);
                     });
 
@@ -235,12 +220,11 @@
                     return {
                         "x": webMercator.x,
                         "y": webMercator.y,
+                        "lat": latlng.latitude,
+                        "lng": latlng.longitude,
                         "attributes": { }
                     };
                 });
-
-                console.log('Processed cluster data');
-                console.log(processed);
                 clusterLayer = new ClusterLayer({
                     "data": processed.data,
                     "distance": 200,
@@ -264,6 +248,87 @@
 
                 clusterLayer.setRenderer(renderer);
                 map.addLayer(clusterLayer);
+
+                // Find cluster corners. WARNING: Doesn't work well around 180 longitude and by poles. This shouldn't matter
+                var regions = loadRegions(clusterLayer);
+
+                // Debug region bounds
+                if (captial_one_recommends.debug) debugRegions(regions);
+
+                // Choose a random region to load from yelp
+                var region;
+                while(!region) region = regions[~~(Math.random() * regions.length)];
+                loadYelp(region.sw_latitude, region.sw_longitude, region.ne_latitude, region.ne_longitude);
+            }
+
+            function loadRegions(clusterLayer) {
+                var regions = [ ];
+                console.log('Find cluster corners');
+                clusterLayer.graphics.forEach(function (graphic) {
+                    console.log(graphic);
+                    var points = (graphic.attributes ? graphic.attributes.points : null)
+                      , id = graphic.attributes.clusterId;
+                    if (points && points.length > 1 && !regions[id]) {
+                        var ne_latitude, ne_longitude, sw_latitude, sw_longitude;
+                        points.forEach(function(p) {
+                            var lat = parseFloat(p.lat), lng = parseFloat(p.lng);
+                            if (!ne_latitude) ne_latitude = lat;
+                            else if (lat > ne_latitude) ne_latitude = lat;
+
+                            if (!ne_longitude) ne_longitude = lng;
+                            else if (lng > ne_longitude) ne_longitude = lng;
+
+                            if (!sw_latitude) sw_latitude = lat;
+                            else if (lat < sw_latitude) sw_latitude = lat;
+
+                            if (!sw_longitude) sw_longitude = lng;
+                            else if (lng < sw_longitude) sw_longitude = lng;
+                        });
+
+                        // { ne_latitude, ne_longitude, sw_latitude, sw_longitude }
+                        regions[id] = { 
+                            'ne_latitude': ne_latitude, 'ne_longitude': ne_longitude, 
+                            'sw_latitude': sw_latitude, 'sw_longitude': sw_longitude 
+                        };
+                    }
+                });
+
+                return regions;
+            }
+
+            function debugRegions(regions) {
+                console.log('Regions');
+                console.log(regions);
+                var features = [];
+                regions.forEach(function(item) {
+                    var ne_graphic = new Graphic(new Point(item.ne_longitude, item.ne_latitude))
+                      , sw_graphic = new Graphic(new Point(item.sw_longitude, item.sw_latitude));
+
+                    features.push(ne_graphic);
+                    features.push(sw_graphic);
+                });
+                selectLayer.applyEdits(features, null, null);
+            }
+
+            function loadYelp(sw_latitude, sw_longitude, ne_latitude, ne_longitude) {
+                $.post(
+                    '/yelp', 
+                    {
+                        'sw_latitude': sw_latitude, 'sw_longitude': sw_longitude, 
+                        'ne_latitude': ne_latitude, 'ne_longitude': ne_longitude
+                    },
+                    function(data) {
+                        data = JSON.parse(data);
+                        console.log(data);
+
+                        var business = data.businesses[~~(Math.random() * data.businesses.length)]
+                          , coord = business.location.coordinate;
+
+                        console.log('Got business!');
+                        console.log(business);
+                        selectLayer.applyEdits([ new Graphic(new Point(coord.longitude, coord.latitude)) ], null, null);
+                    }
+                );
             }
         });
     </script>
