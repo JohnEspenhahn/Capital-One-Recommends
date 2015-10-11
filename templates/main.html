@@ -4,6 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>FeatureLayer using HeatmapRenderer</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="http://js.arcgis.com/3.14/dijit/themes/claro/claro.css">
     <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
     <link rel="stylesheet" href="/lib/css/materialize.css">
@@ -19,6 +21,32 @@
     }
     #mapSidebar{
       display: none;
+    }
+    #cards {
+        overflow: hidden;
+        max-height: 90%;
+        overflow-y: auto;
+    }
+    .s {
+        display: inline-block;
+        max-width: 27px;
+    }
+    .card-title {
+        bottom: 20px !important;
+    }
+    .star-container {
+        position: absolute;
+        bottom: -10px;
+        left: 0px;
+        margin: 20px;
+        color: white;
+    }
+    .container {
+        max-width: 100%;
+    }
+    .cardIMG{
+         filter: blur(50);
+        -webkit-filter: blur(5px) grayscale(0) saturate(1.3) brightness(0.7);
     }
     </style>
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -47,40 +75,7 @@
 
         ">
       <div class="row">
-        <div class="col s12 ">
-          <div class="card">
-            <div class="card-image waves-effect waves-block waves-light">
-              <img class="activator cardIMG" src="http://s3-media2.fl.yelpcdn.com/bphoto/IbaDHDUUK6HvwBcGXp3o4w/ms.jpg">
-              <span class="card-title">Ms. Mong</span>
-            </div>
-                      
-            <div class="card-reveal" style="display: none; transform: translateY(0px);">
-              <span class="card-title grey-text text-darken-4">Ms. Mong<i class="material-icons right">close</i></span>
-                <p>I have been here a couple times already, so I wanted to wait to write a review until I tried different things. <br> This place deserves 5 stars for many...</p>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-image waves-effect waves-block waves-light">
-              <img class="activator cardIMG" src="http://s3-media1.fl.yelpcdn.com/bphoto/Tv_mocqbAq_kmi1LTdeiEw/ms.jpg">
-              <span class="card-title">Lin da's Bar and Grill</span>
-            </div>
-                      
-            <div class="card-reveal" style="display: none; transform: translateY(0px);">
-              <span class="card-title grey-text text-darken-4">Ms. Mong<i class="material-icons right">close</i></span>
-                <p>Amazing cheese fries, Strongbow cider on tap, and two floors (one in the basement with great couches). Not much more that you can as k for from a late night...</p>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-image waves-effect waves-block waves-light">
-              <img class="activator cardIMG" src="http://s3-media2.fl.yelpcdn.com/bphoto/IbaDHDUUK6HvwBcGXp3o4w/ms.jpg">
-              <span class="card-title">Ms. Mong</span>
-            </div>
-                      
-            <div class="card-reveal" style="display: none; transform: translateY(0px);">
-              <span class="card-title grey-text text-darken-4">Ms. Mong<i class="material-icons right">close</i></span>
-                <p>I have been here a couple times already, so I wanted to wait to write a review until I tried different things. <br> This place deserves 5 stars for many...</p>
-            </div>
-          </div>
+        <div id="cards" class="col s12">
         </div>
       </div>
     </div>
@@ -145,17 +140,6 @@
     </div>
 
     <script src="/lib/js/script.js"></script>
-    <style type="text/css">
-        .container {
-            max-width: 100%;
-        }
-        .cardIMG{
-             filter: blur(50);
-            
-            -webkit-filter: blur(5px) grayscale(0) saturate(1.3) brightness(1);
-        }
-    </style>
-
     <script src="/lib/main.js"></script>
 </body>
 </html>
