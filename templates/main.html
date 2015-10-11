@@ -28,7 +28,7 @@
     </script>
     <script src="//js.arcgis.com/3.14/"></script>
     <script>
-        window.captial_one_recommends = { geojson: null, debug: false };
+        window.captial_one_recommends = { geojson: null, regions: null, debug: false };
         $(function(){
             $.post(
                 '/geojson',
@@ -252,6 +252,7 @@
 
                 // Find cluster corners. WARNING: Doesn't work well around 180 longitude and by poles. This shouldn't matter
                 var regions = loadRegions(clusterLayer);
+                captial_one_recommends.regions = regions;
 
                 // Debug region bounds
                 if (captial_one_recommends.debug) debugRegions(regions);
