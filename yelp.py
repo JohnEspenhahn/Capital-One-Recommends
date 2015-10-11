@@ -9,7 +9,7 @@ import oauth2
 # Yelp data
 API_HOST = 'api.yelp.com'
 DEFAULT_TERM = 'food'
-SEARCH_LIMIT = 3
+SEARCH_LIMIT = 2
 SEARCH_PATH = '/v2/search/'
 
 # OAuth credential placeholders that must be filled in by users.
