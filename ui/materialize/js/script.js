@@ -1,11 +1,12 @@
 $(document).ready(function() {
 	$('#modalLogin').openModal();
-
+	$('.esriAttribution').remove();
 	$("#loginButton").click(function() {
 		$('#map').show();
 		$('#mapSidebar').show();
 		$('#modalRegister').hide();
 		$('#modalLogin').hide();
+		$('.esriAttribution').remove();
 
 
 		$.post("http://localhost:5000/login", {
